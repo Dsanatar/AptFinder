@@ -12,17 +12,18 @@ import time
 
 
 class Apt:
-    def __init__(self, rent, beds, address):
+    def __init__(self, rent, beds, address, url):
         self.rent = rent
         self.address = address
         self.beds = beds
         self.distance = 0
+        self.url = url
     
     def set_distance(self, dist):
         self.distance = dist
 
     def __str__(self):
-        return f"${self.rent} {self.beds} @ {self.address}, {self.distance}mi"
+        return f"{self.rent} | {self.beds} | {self.address}| {self.distance} | {self.url}"
 
 
 
@@ -94,6 +95,7 @@ if __name__ == '__main__':
         header = listing.find_element(By.XPATH, ".//article")
         url = header.get_attribute("data-url")
         addr = header.get_attribute("data-streetaddress")
+        print(url)
         print(addr)
 
         # two different tags to look for here:
@@ -110,8 +112,17 @@ if __name__ == '__main__':
                 price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
                 price = price_elem.text
 
+        beds_elem = header.find_elements(By.XPATH, ".//p[@class='property-beds']")
+        beds = ""
+
+        if len(beds_elem) > 0:
+            beds = beds_elem[0].text
+        else:
+            beds_elem = header.find_element(By.XPATH, ".//div[@class='bed-range']")
+            beds = beds_elem.text
+
         count +=1
-        apt = Apt(price, 0, addr)
+        apt = Apt(price, beds, addr, url)
         apt_list.append(apt)
 
         '''
@@ -182,7 +193,7 @@ if __name__ == '__main__':
 
         #split on either | or ,
         addr_options = re.split('\| |,', addr, maxsplit=1)
-        print(addr_options)
+        #print(addr_options)
 
         # this is weird, but the geopy package sometimes struggles to convert these addresses
         # so sometimes they have the name of the building that prefixes the address
@@ -202,7 +213,7 @@ if __name__ == '__main__':
     
         # tries to do the distance calc on building name (if it exists) or the address
         for a in addr_options:
-            print(a)
+            #print(a)
             tmp = None
             try:
                 tmp = loc.geocode(a)
@@ -222,9 +233,7 @@ if __name__ == '__main__':
             # if we find and calculate a valid distance, we can stop this loop, no need to do it twice
             break
     
-    '''
     # sort listings by rent
     apt_list.sort(key=lambda x: x.distance)
     for apt in apt_list:
         print(apt)
-    '''
