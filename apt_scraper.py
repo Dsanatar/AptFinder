@@ -94,6 +94,7 @@ if __name__ == '__main__':
         header = listing.find_element(By.XPATH, ".//article")
         url = header.get_attribute("data-url")
         addr = header.get_attribute("data-streetaddress")
+        print(addr)
 
         # two different tags to look for here:
         price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
@@ -127,6 +128,7 @@ if __name__ == '__main__':
         #listing.find_element(By.CLASS_NAME, "property-pricing").text
 
     print("got " + str(count) + " / " + str(len(listings)))
+    #sys.exit(0)
 
     '''
     #listings.extend(soup.find_all("li",{"class":"ListItem-c11n-8-106-0__sc-13rwu5a-0 StyledListCardWrapper-srp-8-106-0__sc-wtsrtn-0 hcrUex cLDGnX"}))
@@ -172,30 +174,42 @@ if __name__ == '__main__':
     davis = loc.geocode(poi)
     davis_loc = (davis.latitude, davis.longitude)
 
-
-
     for apt in apt_list:
-        print(apt.address)
         addr = apt.address
+        # some addresses here give a range, so split it and just take the second num
+        if "-" in addr and "ID" not in addr:
+            addr = re.split("-", addr, maxsplit=1)[1]
+
         #split on either | or ,
-        addr_options = re.split('\| |, ', addr, maxsplit=1)
-        #print(addr_options)
+        addr_options = re.split('\| |,', addr, maxsplit=1)
+        print(addr_options)
 
         # this is weird, but the geopy package sometimes struggles to convert these addresses
         # so sometimes they have the name of the building that prefixes the address
         # split address to look for this building name and add the city and state
         # additionally, geopy doesn't seem to like APT #s in the search, so remove them here
         if (len(addr_options) > 1):
-            addr_options[0] += " " + city + ", MA"
             #print(addr_options[0])
+            addr_options[0] += " " + city + ", " + state
             addr_options[1] = re.sub("APT.\d+", "", addr_options[1])
+            addr_options[1] = re.sub("Unit.*", "", addr_options[1])
+            addr_options[1] += " " + city + ", " + state
             #print(addr_options[1])
         else:
             addr_options[0] = re.sub("APT.\d+", "", addr_options[0])
+            addr_options[0] = re.sub("Unit.*", "", addr_options[0])
+            addr_options[0] += " " + city + ", " + state
     
         # tries to do the distance calc on building name (if it exists) or the address
         for a in addr_options:
-            tmp = loc.geocode(a)
+            print(a)
+            tmp = None
+            try:
+                tmp = loc.geocode(a)
+            except:
+                print("failed to find", a)
+                continue
+
             # if we can't resolve the address, just move on
             if tmp == None:
                 continue
