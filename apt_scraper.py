@@ -96,19 +96,22 @@ if __name__ == '__main__':
         addr = header.get_attribute("data-streetaddress")
 
         # two different tags to look for here:
-        price = header.find_elements(By.XPATH, ".//div[@class='price-range']")
+        price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
+        price = ""
 
-        if len(price) > 0:
-            print(price[0].text)
+        if len(price_elem) > 0:
+            price = price_elem[0].text
         else:
-            price = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
-            if len(price) > 0:
-                print(price[0].text)
+            price_elem = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
+            if len(price_elem) > 0:
+                price = price_elem[0].text
             else:
-                price = header.find_element(By.XPATH, ".//p[@class='property-rents']")
-                print(price.text)
+                price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
+                price = price_elem.text
 
         count +=1
+        apt = Apt(price, 0, addr)
+        apt_list.append(apt)
 
         '''
         for div in child:
@@ -124,8 +127,8 @@ if __name__ == '__main__':
         #listing.find_element(By.CLASS_NAME, "property-pricing").text
 
     print("got " + str(count) + " / " + str(len(listings)))
-    sys.exit(0)
 
+    '''
     #listings.extend(soup.find_all("li",{"class":"ListItem-c11n-8-106-0__sc-13rwu5a-0 StyledListCardWrapper-srp-8-106-0__sc-wtsrtn-0 hcrUex cLDGnX"}))
     for listing in driver.find_elements(By.CLASS_NAME, class_name):
 
@@ -158,6 +161,7 @@ if __name__ == '__main__':
         
         apt = Apt(rent_int, bd_bath, addr)
         apt_list.append(apt)
+    '''
     
     loc = Nominatim(user_agent="Geopy Library")
 
@@ -171,7 +175,7 @@ if __name__ == '__main__':
 
 
     for apt in apt_list:
-        #print(apt.address)
+        print(apt.address)
         addr = apt.address
         #split on either | or ,
         addr_options = re.split('\| |, ', addr, maxsplit=1)
@@ -204,7 +208,9 @@ if __name__ == '__main__':
             # if we find and calculate a valid distance, we can stop this loop, no need to do it twice
             break
     
+    '''
     # sort listings by rent
     apt_list.sort(key=lambda x: x.distance)
     for apt in apt_list:
         print(apt)
+    '''
