@@ -56,11 +56,13 @@ if __name__ == '__main__':
 
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+    options.add_argument("--headless=new")
 
     driver = webdriver.Chrome(options)
     driver.get(full_query)
     
     #driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    '''
     action = webdriver.ActionChains(driver)
     element = driver.find_element(By.ID,'placards')
 
@@ -72,6 +74,7 @@ if __name__ == '__main__':
         scroll_container.send_keys(Keys.PAGE_DOWN)
 
     time.sleep(2)
+    '''
     #driver.execute_script("arguments[0].scrollBy(0,200);", scroll_container)
 
     parsed_links = []
@@ -84,17 +87,36 @@ if __name__ == '__main__':
     #class_name = ' '.join(soup.find(id="grid-search-results").find("li")["class"])
     class_name = 'mortar-wrapper'
 
-    listings = driver.find_element(By.CLASS_NAME, "placardContainer").find_elements(By.CLASS_NAME, "mortar-wrapper")
+    listings = driver.find_element(By.ID, "placardContainer").find_element(By.XPATH, ".//ul").find_elements(By.XPATH, ".//li[@class='mortar-wrapper']")
     
-
     count = 0
     for listing in listings:
-        child = listing.find_elements(By.XPATH, ".//div")
+        header = listing.find_element(By.XPATH, ".//article")
+        url = header.get_attribute("data-url")
+        addr = header.get_attribute("data-streetaddress")
+
+        # two different tags to look for here:
+        price = header.find_elements(By.XPATH, ".//div[@class='price-range']")
+
+        if len(price) > 0:
+            print(price[0].text)
+        else:
+            price = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
+            if len(price) > 0:
+                print(price[0].text)
+            else:
+                price = header.find_element(By.XPATH, ".//p[@class='property-rents']")
+                print(price.text)
+
+        count +=1
+
+        '''
         for div in child:
             if div.get_attribute("class") == "property-address js-url":
                 count += 1
                 print(div.get_attribute("title"))
                 break
+        '''
         #title = listing.find_elements(By.CLASS_NAME, "property-title")
         #print(len(title))
         #addr = listing.find_element(By.CLASS_NAME, "property-link")
