@@ -4,6 +4,12 @@ from bs4 import BeautifulSoup
 from geopy.geocoders import Nominatim
 from geopy import distance
 import re
+import webbrowser
+import pyautogui
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+import time
 
 
 class Apt:
@@ -28,7 +34,9 @@ if __name__ == '__main__':
         sys.exit(0)
 
     headers = headers={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36","Accept-Language":"en-US,en;q=0.9","Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9","Accept-Encoding":"gzip, deflate, br","upgrade-insecure-requests":"1"}
-    zillow = 'https://www.zillow.com/'
+    
+    https = 'https://'
+    zillow = 'www.zillow.com/'
 
     city = args[1]
     beds = args[2]
@@ -40,16 +48,41 @@ if __name__ == '__main__':
     price_query ='"mp":{"max":' + str(price) + '},"price":{"max":678881},'
     #price_query = 'mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A' + str(price) + '%7D%2C'
 
+
     apt_list = []
     for page in range(1,2):
         query = '/rentals/?searchQueryState={"isMapVisible":true,"mapBounds":{"west":-71.20319402978515,"east":-71.02123297021484,"south":42.32359097463271,"north":42.433152995065775},"mapZoom":12,"usersSearchTerm":"Cambridge MA","regionSelection":[{"regionId":3934,"regionType":6}],"filterState":{"fr":{"value":true},"fsba":{"value":false},"fsbo":{"value":false},"nc":{"value":false},"cmsn":{"value":false},"auc":{"value":false},"fore":{"value":false},' + bed_query + price_query +'"mf":{"value":false},"land":{"value":false},"manu":{"value":false}},"isListVisible":true}'
         #query = '/rentals/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-71.20319402978515%2C%22east%22%3A-71.02123297021484%2C%22south%22%3A42.32359097463271%2C%22north%22%3A42.433152995065775%7D%2C%22mapZoom%22%3A12%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A3934%2C%22regionType%22%3A6%7D%5D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22priorityscore%22%7D%2C%22fr%22%3A%7B%22value%22%3Atrue%7D%2C%22fsba%22%3A%7B%22value%22%3Afalse%7D%2C%22fsbo%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22cmsn%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3Anull%2C%22max%22%3A584024%7D%2C%22' + price_query + '%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22' + bed_query + '%22isListVisible%22%3Atrue%2C%22usersSearchTerm%22%3A%22Cambridge%20MA%22%7D'
         zillow = zillow + city + state + query
-
-        req = requests.get(zillow, headers=headers)
         
-        resp = req.text
+        print(zillow)
 
+        # Set up WebDriver (replace 'path_to_driver' with your driver path)
+        #driver = webdriver.Chrome("C:\Program Files\Google\Chrome\Application\chrome.exe")
+        
+        # Open Zillow link
+        options = webdriver.ChromeOptions()
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+
+        driver = webdriver.Chrome(options)
+        driver.get(https+zillow)
+        time.sleep(1)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(1)
+        break
+
+        # for some reason webbrowser doesn't want the https part
+        '''
+        ret = webbrowser.open(zillow)
+        time.sleep(2)
+        pyautogui.moveTo(1600, 900, duration = 1)
+
+        pyautogui.scroll(-5000)
+        time.sleep(10)
+        pyautogui.scroll(2000)
+        '''
+        req = requests.get(https+zillow, headers=headers)
+        resp = req.text
         soup = BeautifulSoup(resp,'html.parser')
         class_name = ' '.join(soup.find(id="grid-search-results").find("li")["class"])
 
@@ -92,11 +125,11 @@ if __name__ == '__main__':
     davis = loc.geocode(poi)
     davis_loc = (davis.latitude, davis.longitude)
 
-
-
+    '''
     for apt in apt_list:
         #print(apt.address)
         addr = apt.address
+
         #split on either | or ,
         addr_options = re.split('\| |, ', addr, maxsplit=1)
         #print(addr_options)
@@ -128,7 +161,10 @@ if __name__ == '__main__':
             # if we find and calculate a valid distance, we can stop this loop, no need to do it twice
             break
     
+    '''
+
     # sort listings by rent
     apt_list.sort(key=lambda x: x.distance)
+    print(str(len(apt_list)) + " found")
     for apt in apt_list:
         print(apt)
