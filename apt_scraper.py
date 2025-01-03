@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import time
+import csv
 
 
 class Apt:
@@ -21,6 +22,10 @@ class Apt:
     
     def set_distance(self, dist):
         self.distance = dist
+
+    def get_data(self):
+        data = [self.rent, self.beds, self.address, self.distance, self.url]
+        return data
 
     def __str__(self):
         return f"{self.rent} | {self.beds} | {self.address}| {self.distance} | {self.url}"
@@ -66,7 +71,7 @@ if __name__ == '__main__':
 
     apt_list = []
     count = 0
-    for page in range(1,3):
+    for page in range(1,2):
         curr_query = query
         if page != 1:
             curr_query += str(page) + "/" + move_in
@@ -114,7 +119,6 @@ if __name__ == '__main__':
             apt_list.append(apt)
 
     print("got " + str(count))
-    sys.exit(0)
 
     '''
     #listings.extend(soup.find_all("li",{"class":"ListItem-c11n-8-106-0__sc-13rwu5a-0 StyledListCardWrapper-srp-8-106-0__sc-wtsrtn-0 hcrUex cLDGnX"}))
@@ -210,5 +214,9 @@ if __name__ == '__main__':
     
     # sort listings by rent
     apt_list.sort(key=lambda x: x.distance)
-    for apt in apt_list:
-        print(apt)
+
+    with open("listings.csv", "w", newline='') as f:
+        writer = csv.writer(f, delimiter='|')
+        writer.writerow(['sep=|'])
+        for apt in apt_list:
+            writer.writerow(apt.get_data())
