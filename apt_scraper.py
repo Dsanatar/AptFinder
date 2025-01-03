@@ -48,98 +48,73 @@ if __name__ == '__main__':
     beds = args[3]
     price = args[4]
 
+    # read from cli?
+    move_in = '?mid=20250901'
+
     location = city + '-' + state + '/'
     bed_query = 'min-' + beds + '-bedrooms'
     price_query = '-under-' + price
 
-    full_query = link + location + bed_query + price_query +'/'
-    print(full_query)
+    query = link + location + bed_query + price_query +'/'
+    
 
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
     options.add_argument("--headless=new")
 
-    driver = webdriver.Chrome(options)
-    driver.get(full_query)
-    
-    #driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    '''
-    action = webdriver.ActionChains(driver)
-    element = driver.find_element(By.ID,'placards')
-
-    action.move_to_element(element).perform()
-    time.sleep(2)
-
-    scroll_container = driver.find_element(By.ID, "placards")
-    for i in range(0,15):
-        scroll_container.send_keys(Keys.PAGE_DOWN)
-
-    time.sleep(2)
-    '''
-    #driver.execute_script("arguments[0].scrollBy(0,200);", scroll_container)
-
-    parsed_links = []
+    driver = webdriver.Chrome(options)   
 
     apt_list = []
-    #query = '/rentals/?searchQueryState={"pagination":{"currentPage":' + str(page) + '},"isMapVisible":true,"mapBounds":{"west":-71.20319402978515,"east":-71.02123297021484,"south":42.32359097463271,"north":42.433152995065775},"mapZoom":12,"usersSearchTerm":"Cambridge MA","regionSelection":[{"regionId":3934,"regionType":6}],"filterState":{"fr":{"value":true},"fsba":{"value":false},"fsbo":{"value":false},"nc":{"value":false},"cmsn":{"value":false},"auc":{"value":false},"fore":{"value":false},' + bed_query + price_query +'"mf":{"value":false},"land":{"value":false},"manu":{"value":false}},"isListVisible":true}'
-    #'https://www.zillow.co m/cambridge-ma/rentals/?searchQueryState={"pagination":{}:"isMapVisible":true:"mapBounds":{"north":42.43315299506577:"south":42.3235909746327:"east":-71.02123297021484:"west":-71.20319402978515}:"filterState":{"fr":{"value":true}:"fsba":{"value":false}:"fsbo":{"value":false}:"nc":{"value":false}:"cmsn":{"value":false}:"auc":{"value":false}:"fore":{"value":false}:"mf":{"value":false}:"land":{"value":false}:"manu":{"value":false}:"beds":{"min":2:"max":2}:"mp":{"max":3400}:"price":{"max":678881}}:"isListVisible":true:"mapZoom":12:"regionSelection":%5B{"regionId":3934:"regionType":6}%5D:"usersSearchTerm":"Cambridge%20MA"}'
-
-    
-    #class_name = ' '.join(soup.find(id="grid-search-results").find("li")["class"])
-    class_name = 'mortar-wrapper'
-
-    listings = driver.find_element(By.ID, "placardContainer").find_element(By.XPATH, ".//ul").find_elements(By.XPATH, ".//li[@class='mortar-wrapper']")
-    
     count = 0
-    for listing in listings:
-        header = listing.find_element(By.XPATH, ".//article")
-        url = header.get_attribute("data-url")
-        addr = header.get_attribute("data-streetaddress")
-        print(url)
-        print(addr)
-
-        # two different tags to look for here:
-        price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
-        price = ""
-
-        if len(price_elem) > 0:
-            price = price_elem[0].text
+    for page in range(1,3):
+        curr_query = query
+        if page != 1:
+            curr_query += str(page) + "/" + move_in
         else:
-            price_elem = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
+            curr_query += move_in
+
+        print(curr_query)
+
+        driver.get(curr_query)
+        listings = driver.find_element(By.ID, "placardContainer").find_element(By.XPATH, ".//ul").find_elements(By.XPATH, ".//li[@class='mortar-wrapper']")
+        
+        
+        for listing in listings:
+            header = listing.find_element(By.XPATH, ".//article")
+            url = header.get_attribute("data-url")
+            addr = header.get_attribute("data-streetaddress")
+            print(url)
+            print(addr)
+
+            # two different tags to look for here:
+            price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
+            price = ""
+
             if len(price_elem) > 0:
                 price = price_elem[0].text
             else:
-                price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
-                price = price_elem.text
+                price_elem = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
+                if len(price_elem) > 0:
+                    price = price_elem[0].text
+                else:
+                    price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
+                    price = price_elem.text
 
-        beds_elem = header.find_elements(By.XPATH, ".//p[@class='property-beds']")
-        beds = ""
+            beds_elem = header.find_elements(By.XPATH, ".//p[@class='property-beds']")
+            beds = ""
 
-        if len(beds_elem) > 0:
-            beds = beds_elem[0].text
-        else:
-            beds_elem = header.find_element(By.XPATH, ".//div[@class='bed-range']")
-            beds = beds_elem.text
+            if len(beds_elem) > 0:
+                beds = beds_elem[0].text
+            else:
+                beds_elem = header.find_element(By.XPATH, ".//div[@class='bed-range']")
+                beds = beds_elem.text
 
-        count +=1
-        apt = Apt(price, beds, addr, url)
-        apt_list.append(apt)
+            count +=1
+            apt = Apt(price, beds, addr, url)
+            apt_list.append(apt)
 
-        '''
-        for div in child:
-            if div.get_attribute("class") == "property-address js-url":
-                count += 1
-                print(div.get_attribute("title"))
-                break
-        '''
-        #title = listing.find_elements(By.CLASS_NAME, "property-title")
-        #print(len(title))
-        #addr = listing.find_element(By.CLASS_NAME, "property-link")
-        #print(addr)
-        #listing.find_element(By.CLASS_NAME, "property-pricing").text
-
-    print("got " + str(count) + " / " + str(len(listings)))
-    #sys.exit(0)
+    print("got " + str(count))
+    sys.exit(0)
 
     '''
     #listings.extend(soup.find_all("li",{"class":"ListItem-c11n-8-106-0__sc-13rwu5a-0 StyledListCardWrapper-srp-8-106-0__sc-wtsrtn-0 hcrUex cLDGnX"}))
