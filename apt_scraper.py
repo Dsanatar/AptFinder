@@ -13,12 +13,16 @@ import csv
 
 
 class Apt:
-    def __init__(self, rent, beds, address, url):
+    def __init__(self, rent, beds, address, city, url):
         self.rent = rent
         self.address = address
         self.beds = beds
         self.distance = 0
+        self.city = city
         self.url = url
+
+    def get_city(self):
+        return self.city
     
     def set_distance(self, dist):
         self.distance = dist
@@ -56,67 +60,70 @@ if __name__ == '__main__':
     # read from cli?
     move_in = '?mid=20250901'
 
-    location = city + '-' + state + '/'
+    cities = ['cambridge', 'somerville']
+
     bed_query = 'min-' + beds + '-bedrooms'
     price_query = '-under-' + price
 
-    query = link + location + bed_query + price_query +'/'
     
-
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
     options.add_argument("--headless=new")
 
     driver = webdriver.Chrome(options)   
+    loc = Nominatim(user_agent="Geopy Library")
 
     apt_list = []
     count = 0
-    for page in range(1,2):
-        curr_query = query
-        if page != 1:
-            curr_query += str(page) + "/" + move_in
-        else:
-            curr_query += move_in
-
-        print(curr_query)
-
-        driver.get(curr_query)
-        listings = driver.find_element(By.ID, "placardContainer").find_element(By.XPATH, ".//ul").find_elements(By.XPATH, ".//li[@class='mortar-wrapper']")
-        
-        
-        for listing in listings:
-            header = listing.find_element(By.XPATH, ".//article")
-            url = header.get_attribute("data-url")
-            addr = header.get_attribute("data-streetaddress")
-            print(url)
-            print(addr)
-
-            # two different tags to look for here:
-            price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
-            price = ""
-
-            if len(price_elem) > 0:
-                price = price_elem[0].text
+    for city in cities:
+        location = city + '-' + state + '/'
+        query = link + location + bed_query + price_query +'/'
+        for page in range(1,2):
+            curr_query = query
+            if page != 1:
+                curr_query += str(page) + "/" + move_in
             else:
-                price_elem = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
+                curr_query += move_in
+
+            print(curr_query)
+
+            driver.get(curr_query)
+            listings = driver.find_element(By.ID, "placardContainer").find_element(By.XPATH, ".//ul").find_elements(By.XPATH, ".//li[@class='mortar-wrapper']")
+            
+            
+            for listing in listings:
+                header = listing.find_element(By.XPATH, ".//article")
+                url = header.get_attribute("data-url")
+                addr = header.get_attribute("data-streetaddress")
+                print(url)
+                print(addr)
+
+                # two different tags to look for here:
+                price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
+                price = ""
+
                 if len(price_elem) > 0:
                     price = price_elem[0].text
                 else:
-                    price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
-                    price = price_elem.text
+                    price_elem = header.find_elements(By.XPATH, ".//p[@class='property-pricing']")
+                    if len(price_elem) > 0:
+                        price = price_elem[0].text
+                    else:
+                        price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
+                        price = price_elem.text
 
-            beds_elem = header.find_elements(By.XPATH, ".//p[@class='property-beds']")
-            beds = ""
+                beds_elem = header.find_elements(By.XPATH, ".//p[@class='property-beds']")
+                beds = ""
 
-            if len(beds_elem) > 0:
-                beds = beds_elem[0].text
-            else:
-                beds_elem = header.find_element(By.XPATH, ".//div[@class='bed-range']")
-                beds = beds_elem.text
+                if len(beds_elem) > 0:
+                    beds = beds_elem[0].text
+                else:
+                    beds_elem = header.find_element(By.XPATH, ".//div[@class='bed-range']")
+                    beds = beds_elem.text
 
-            count +=1
-            apt = Apt(price, beds, addr, url)
-            apt_list.append(apt)
+                count +=1
+                apt = Apt(price, beds, addr, city, url)
+                apt_list.append(apt)
 
     print("got " + str(count))
 
@@ -155,7 +162,6 @@ if __name__ == '__main__':
         apt_list.append(apt)
     '''
     
-    loc = Nominatim(user_agent="Geopy Library")
 
     # Point of interest
     poi = "Davis Square MA"
@@ -180,15 +186,15 @@ if __name__ == '__main__':
         # additionally, geopy doesn't seem to like APT #s in the search, so remove them here
         if (len(addr_options) > 1):
             #print(addr_options[0])
-            addr_options[0] += " " + city + ", " + state
+            addr_options[0] += " " + apt.get_city() + ", " + state
             addr_options[1] = re.sub("APT.\d+", "", addr_options[1])
             addr_options[1] = re.sub("Unit.*", "", addr_options[1])
-            addr_options[1] += " " + city + ", " + state
+            addr_options[1] += " " + apt.get_city() + ", " + state
             #print(addr_options[1])
         else:
             addr_options[0] = re.sub("APT.\d+", "", addr_options[0])
             addr_options[0] = re.sub("Unit.*", "", addr_options[0])
-            addr_options[0] += " " + city + ", " + state
+            addr_options[0] += " " + apt.get_city() + ", " + state
     
         # tries to do the distance calc on building name (if it exists) or the address
         for a in addr_options:
