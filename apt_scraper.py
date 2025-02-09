@@ -10,6 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import time
 import csv
+from functools import partial
 
 
 class Apt:
@@ -57,10 +58,12 @@ if __name__ == '__main__':
     beds = args[3]
     price = args[4]
 
-    # read from cli?
-    move_in = '?mid=20250901'
+    # TODO read from cli?
+    #move_in = '?mid=20250901'
 
-    cities = ['cambridge', 'somerville']
+    #cities = ['cambridge', 'somerville']
+    cities = ['cambridge']
+    max_page = 2
 
     bed_query = 'min-' + beds + '-bedrooms'
     price_query = '-under-' + price
@@ -72,18 +75,21 @@ if __name__ == '__main__':
 
     driver = webdriver.Chrome(options)   
     loc = Nominatim(user_agent="Geopy Library")
+    geocode = partial(loc.geocode, language="en")
 
     apt_list = []
     count = 0
     for city in cities:
         location = city + '-' + state + '/'
         query = link + location + bed_query + price_query +'/'
-        for page in range(1,2):
+        for page in range(1,max_page):
             curr_query = query
+            '''
             if page != 1:
                 curr_query += str(page) + "/" + move_in
             else:
                 curr_query += move_in
+            '''
 
             print(curr_query)
 
@@ -167,7 +173,7 @@ if __name__ == '__main__':
     poi = "Davis Square MA"
 
     # entering the location name
-    davis = loc.geocode(poi)
+    davis = geocode(poi)
     davis_loc = (davis.latitude, davis.longitude)
 
     for apt in apt_list:
@@ -201,7 +207,7 @@ if __name__ == '__main__':
             #print(a)
             tmp = None
             try:
-                tmp = loc.geocode(a)
+                tmp = geocode(a)
             except:
                 print("failed to find", a)
                 continue
@@ -221,7 +227,9 @@ if __name__ == '__main__':
     # sort listings by rent
     apt_list.sort(key=lambda x: x.distance)
 
-    with open("listings.csv", "w", newline='') as f:
+    timestr = time.strftime("%m-%d-%Y-%H%M%S")
+    file_path = "output/" + timestr + ".csv"
+    with open(file_path, "w", newline='') as f:
         writer = csv.writer(f, delimiter='|')
         writer.writerow(['sep=|'])
         for apt in apt_list:
