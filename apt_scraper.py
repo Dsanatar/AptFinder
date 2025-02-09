@@ -11,6 +11,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import csv
 from functools import partial
+import argparse
 
 
 class Apt:
@@ -38,10 +39,22 @@ class Apt:
 
 
 if __name__ == '__main__':
-    args = sys.argv
-    if len(args) < 5:
-        print("give me args: [city] [state] [beds] [price]")
+
+    parser = argparse.ArgumentParser(prog='apt_scraper')
+    parser.add_argument('cities', nargs="+", type=str, help="list of cities to search")
+    parser.add_argument('state', type=str, help="single state abbreviation ex: ny")
+    parser.add_argument('beds', type=int, help="number of bedrooms")
+    parser.add_argument('price', type=int, help="max search price")
+    parser.add_argument('--pages', nargs='?', type=int, default=1)
+
+    args = parser.parse_args()
+    print(args)
+    
+    if args.state == '' or not args.cities:
+        print("please provide state and city")
+        parser.print_help()
         sys.exit(0)
+
 
     #headers = headers={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36","Accept-Language":"en-US,en;q=0.9","Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9","Accept-Encoding":"gzip, deflate, br","upgrade-insecure-requests":"1"}
     headers = {
@@ -53,36 +66,37 @@ if __name__ == '__main__':
 
     link = 'https://www.apartments.com/'
 
-    city = args[1]
-    state = args[2]
-    beds = args[3]
-    price = args[4]
+    # increment page number bc loop is exclusive bounds
+    max_pages = args.pages+1
 
-    # TODO read from cli?
-    #move_in = '?mid=20250901'
-
-    #cities = ['cambridge', 'somerville']
-    cities = ['cambridge']
-    max_page = 2
-
-    bed_query = 'min-' + beds + '-bedrooms'
-    price_query = '-under-' + price
-
+    bed_query = 'min-' + str(args.beds) + '-bedrooms'
+    price_query = '-under-' + str(args.price)
     
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
     options.add_argument("--headless=new")
 
     driver = webdriver.Chrome(options)   
+
     loc = Nominatim(user_agent="Geopy Library")
     geocode = partial(loc.geocode, language="en")
 
     apt_list = []
     count = 0
-    for city in cities:
-        location = city + '-' + state + '/'
+    for city in args.cities:
+        # before we do the search, make sure the provided cities are valid
+        try:
+            test = geocode(city + ", " + args.state)
+            if test == None:
+                 print("invalid city name: ", city)
+                 continue
+        except:
+            print("invalid city name: ", city)
+            continue
+
+        location = city + '-' + args.state + '/'
         query = link + location + bed_query + price_query +'/'
-        for page in range(1,max_page):
+        for page in range(1,max_pages):
             curr_query = query
             '''
             if page != 1:
@@ -192,15 +206,15 @@ if __name__ == '__main__':
         # additionally, geopy doesn't seem to like APT #s in the search, so remove them here
         if (len(addr_options) > 1):
             #print(addr_options[0])
-            addr_options[0] += " " + apt.get_city() + ", " + state
+            addr_options[0] += " " + apt.get_city() + ", " + args.state
             addr_options[1] = re.sub("APT.\d+", "", addr_options[1])
             addr_options[1] = re.sub("Unit.*", "", addr_options[1])
-            addr_options[1] += " " + apt.get_city() + ", " + state
+            addr_options[1] += " " + apt.get_city() + ", " + args.state
             #print(addr_options[1])
         else:
             addr_options[0] = re.sub("APT.\d+", "", addr_options[0])
             addr_options[0] = re.sub("Unit.*", "", addr_options[0])
-            addr_options[0] += " " + apt.get_city() + ", " + state
+            addr_options[0] += " " + apt.get_city() + ", " + args.state
     
         # tries to do the distance calc on building name (if it exists) or the address
         for a in addr_options:
@@ -214,6 +228,7 @@ if __name__ == '__main__':
 
             # if we can't resolve the address, just move on
             if tmp == None:
+                print("?? ", a)
                 continue
             #tmp = loc.geocode(apt_list[1].address.split('|')[-1])
             tmp_loc = (tmp.latitude, tmp.longitude)
