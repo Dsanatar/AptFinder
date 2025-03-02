@@ -7,6 +7,7 @@ class Apt:
         self.address = address
         self.beds = beds
         self.distance = 0
+        self.distance_to = ""
         self.city = city
         self.url = url
 
@@ -16,12 +17,15 @@ class Apt:
     def set_distance(self, dist):
         self.distance = dist
 
+    def set_dist_loc(self, loc):
+        self.distance_to = loc
+
     def get_data(self):
-        data = [self.rent, self.beds, self.address, self.distance, self.url]
+        data = [self.rent, self.beds, self.address, self.distance_to, self.distance, self.url]
         return data
 
     def __str__(self):
-        return f"{self.rent} | {self.beds} | {self.address}| {self.distance} | {self.url}"
+        return f"{self.rent} | {self.beds} | {self.address}| {self.distance} | closet = {self.distance_to} | {self.url}"
 
 
 

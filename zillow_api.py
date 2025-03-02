@@ -54,7 +54,7 @@ def get_listings(city, state, is_rental, rent, beds):
 
     apt_list = []
     for apt in listings:
-        print(apt)
+        #print(apt)
         #skip for now
         if 'units' in apt:
             continue 
