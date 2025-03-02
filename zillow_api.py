@@ -4,9 +4,10 @@ import re
 import time
 from dotenv import dotenv_values
 from Apt import Apt, csv_dump
+from distance import get_distances
 
 
-def get_listings(location, is_rental, rent, beds):
+def get_listings(city, state, is_rental, rent, beds):
 
     url = "https://zillow-com1.p.rapidapi.com/propertyExtendedSearch"
 
@@ -26,6 +27,8 @@ def get_listings(location, is_rental, rent, beds):
         status_type = 'ForRent'
     else:
         status_type = 'ForSale'
+
+    location = (city + "," + state)
 
     querystring = {
                 "location": location,
@@ -62,14 +65,20 @@ def get_listings(location, is_rental, rent, beds):
         a = Apt(rent, beds, address, "", url)
         apt_list.append(a)
 
-    print(len(apt_list))
+
+    #print(len(apt_list))
+    get_distances(apt_list, state)
+
+    # sort listings by rent
+    apt_list.sort(key=lambda x: x.rent)
     csv_dump(apt_list)
 
 
 if __name__ == '__main__':
     #env = dotenv_values('.env')
-    location = 'Cambridge, MA'
+    city = 'Cambridge'
+    state = 'MA'
     is_rental = True
     rent = 3700
     beds = 2
-    get_listings(location, is_rental, rent, beds)
+    get_listings(city, state, is_rental, rent, beds)
