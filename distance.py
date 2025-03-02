@@ -23,8 +23,13 @@ def get_distances(apt_list, state):
         # gecode doesn't like unit numbers 
         # regex here removes everything after Unit until the next comma
         # so it keeps the city name from the address
-        if 'Unit' in addr:
-            addr = re.sub('Unit[^,]*', "", addr)
+        addr = addr.lower()
+        if 'unit' in addr:
+            addr = re.sub('unit[^,]*', "", addr)
+        elif '#' in addr:
+            addr = re.sub('#[^,]*', "", addr)
+        elif 'apt':
+            addr = re.sub('apt[^,]*', "", addr)
 
         '''
         #split on either | or ,
