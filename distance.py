@@ -20,6 +20,13 @@ def get_distances(apt_list, state):
         if "-" in addr and "ID" not in addr:
             addr = re.split("-", addr, maxsplit=1)[1]
 
+        # gecode doesn't like unit numbers 
+        # regex here removes everything after Unit until the next comma
+        # so it keeps the city name from the address
+        if 'Unit' in addr:
+            addr = re.sub('Unit[^,]*', "", addr)
+
+        '''
         #split on either | or ,
         addr_options = re.split('\| |,', addr, maxsplit=1)
         #print(addr_options)
@@ -39,26 +46,28 @@ def get_distances(apt_list, state):
             addr_options[0] = re.sub("APT.\d+", "", addr_options[0])
             addr_options[0] = re.sub("Unit.*", "", addr_options[0])
             addr_options[0] += " " + apt.get_city() + ", " + state
-    
+        '''
         # tries to do the distance calc on building name (if it exists) or the address
-        for a in addr_options:
-            #print(a)
-            tmp = None
-            try:
-                tmp = geocode(a)
-            except:
-                print("failed to find", a)
-                continue
+        #print(a)
+        tmp = None
+        try:
+            tmp = geocode(addr)
+        except:
+            print("failed to find", addr)
+            continue
 
-            # if we can't resolve the address, just move on
-            if tmp == None:
-                print("?? ", a)
-                continue
-            #tmp = loc.geocode(apt_list[1].address.split('|')[-1])
-            tmp_loc = (tmp.latitude, tmp.longitude)
+        # if we can't resolve the address, just move on
+        if tmp == None:
+            print("?? ", addr)
+            continue
 
-            dist = round(distance.distance(tmp_loc, davis_loc).miles, 2)
-            print("****Distance = ", dist)
-            apt.set_distance(dist)
-            # if we find and calculate a valid distance, we can stop this loop, no need to do it twice
-            break
+        #tmp = loc.geocode(apt_list[1].address.split('|')[-1])
+        tmp_loc = (tmp.latitude, tmp.longitude)
+
+        dist = round(distance.distance(tmp_loc, davis_loc).miles, 2)
+        print("****Distance = ", dist)
+        if dist > 20:
+            print("invalid distance...")
+            dist = 0
+        apt.set_distance(dist)
+        # if we find and calculate a valid distance, we can stop this loop, no need to do it twice
