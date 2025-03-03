@@ -1,6 +1,6 @@
 import sys
 import requests
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 from geopy.geocoders import Nominatim
 from geopy import distance
 import re

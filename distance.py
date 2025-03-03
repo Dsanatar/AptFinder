@@ -19,6 +19,7 @@ def get_distances(apt_list, state):
     for apt in apt_list:
         dist_list = []
         min_dist = 0
+        valid = False
         for idx, poi in enumerate(poi_list):
             geo = geocode(poi)
             poi_loc = (geo.latitude, geo.longitude)
@@ -81,14 +82,16 @@ def get_distances(apt_list, state):
 
             if idx == 0 or dist < dist_list[min_idx]:
                 min_idx = idx
+            valid = True
 
             print("****Distance to " + poi + "= " + str(dist))
             if dist > 20:
                 print("invalid distance...")
                 dist = 0
 
-        apt.set_distance(dist_list[min_idx])
-        apt.set_dist_loc(poi_list[min_idx])
+        if valid:
+            apt.set_distance(dist_list[min_idx])
+            apt.set_dist_loc(poi_list[min_idx])
 
     print('idx', min_idx)
     print(poi_list[min_idx] + " " + str(dist_list[min_idx]))
