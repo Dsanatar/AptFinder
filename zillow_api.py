@@ -7,7 +7,7 @@ from Apt import Apt, csv_dump
 from distance import get_distances
 
 
-def get_listings(city, state, is_rental, rent, beds):
+def get_listings(city, state, is_rental, rent, beds, move_in_date, apt_list):
 
     url = "https://zillow-com1.p.rapidapi.com/propertyExtendedSearch"
 
@@ -17,7 +17,7 @@ def get_listings(city, state, is_rental, rent, beds):
     status_type = ''
 
     # TODO remove this if results are bad
-    sort = 'Newest'
+    #sort = 'Newest'
 
     rentMinPrice = str(rent - 500)
     rentMaxPrice = str(rent)
@@ -28,31 +28,31 @@ def get_listings(city, state, is_rental, rent, beds):
     else:
         status_type = 'ForSale'
 
-    location = (city + "," + state)
+    location = (city + ", " + state)
 
     querystring = {
                 "location": location,
                 "status_type":status_type,
-                "sort": sort,
                 "rentMinPrice": rentMinPrice,
                 "rentMaxPrice": rentMaxPrice,
-                "bedsMin": bedsMin
-                }
+                "bedsMin": bedsMin,
+    }
+    #print(querystring)
 
     env = dotenv_values('.env')
     headers = {
         "x-rapidapi-key": env["API_KEY"],
         "x-rapidapi-host": "zillow-com1.p.rapidapi.com"
     }
-
+    
     response = requests.get(url, headers=headers, params=querystring)
 
     data = response.json()
+    #print(data)
     listings = data['props']
 
     prefix = 'https://www.zillow.com'
 
-    apt_list = []
     for apt in listings:
         #print(apt)
         #skip for now
@@ -67,18 +67,9 @@ def get_listings(city, state, is_rental, rent, beds):
 
 
     #print(len(apt_list))
-    get_distances(apt_list, state)
+    #get_distances(apt_list, state)
 
     # sort listings by rent
-    apt_list.sort(key=lambda x: x.rent)
-    csv_dump(apt_list)
+    #apt_list.sort(key=lambda x: x.rent)
+    #csv_dump(apt_list)
 
-
-if __name__ == '__main__':
-    #env = dotenv_values('.env')
-    city = 'Cambridge'
-    state = 'MA'
-    is_rental = True
-    rent = 3700
-    beds = 2
-    get_listings(city, state, is_rental, rent, beds)
