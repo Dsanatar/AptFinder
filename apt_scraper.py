@@ -113,42 +113,7 @@ def scrape_apts(city, state, beds, price, apt_list):
             apt_list.append(apt)
 
     print("got " + str(count))
-
-    '''
-    #listings.extend(soup.find_all("li",{"class":"ListItem-c11n-8-106-0__sc-13rwu5a-0 StyledListCardWrapper-srp-8-106-0__sc-wtsrtn-0 hcrUex cLDGnX"}))
-    for listing in driver.find_elements(By.CLASS_NAME, class_name):
-
-        link = listing.find_all('data-url')
-        print(link)
-        if listing.find("span",{'data-test':'property-card-price'}) == None:
-            # this is to avoid grabbing listings from the website that are "loading"
-            continue
-        rent = listing.find("span",{'data-test':'property-card-price'}).text
-
-        # this assumes we aren't looking for higher than 4digit rent cost
-        rent_int = rent.replace('$', '').replace(',', '')[:4]
-
-        addr = listing.find("address", {'data-test': 'property-card-addr'}).text
-
-        bd_bath = ""
-        count = 0
-        for stat in listing.find_all("ul", class_="StyledPropertyCardHomeDetailsList-c11n-8-106-0__sc-1j0som5-0 eDOePJ"):
-            for list_items in stat.find_all('li'):
-                bd_bath = bd_bath + list_items.text + ' '
-                count = count + 1
-                # first two entries have bed/bath
-                if count == 2:
-                    break
-
-        # this is the case where the listing contains multiple units
-        if bd_bath == '':
-            bd_bath = rent[rent.find("+")+2:]
-
-        
-        apt = Apt(rent_int, bd_bath, addr)
-        apt_list.append(apt)
-
-    '''
+    
     #get_distances(apt_list, state)    
 
     # sort listings by rent
