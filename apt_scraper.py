@@ -82,8 +82,8 @@ def scrape_apts(city, state, beds, price, apt_list):
                 addr = addr_title[0].text
             else:
                 print('oops')
-            print(url)
-            print(addr)
+            #print(url)
+            #print(addr)
 
             # two different tags to look for here:
             price_elem = header.find_elements(By.XPATH, ".//div[@class='price-range']")
@@ -127,7 +127,7 @@ def scrape_apts(city, state, beds, price, apt_list):
             apt = Apt(price, beds, addr, city, url)
             apt_list.append(apt)
 
-    print("got " + str(count))
+    print("Found ", str(count))
     
     #get_distances(apt_list, state)    
 

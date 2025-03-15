@@ -73,7 +73,7 @@ def get_listings(city, state, is_rental, rent, beds, move_in_date, apt_list):
         apt_list.append(a)
 
 
-    #print(len(apt_list))
+    print('Found', len(apt_list))
     #get_distances(apt_list, state)
 
     # sort listings by rent
