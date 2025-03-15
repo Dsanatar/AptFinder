@@ -35,5 +35,6 @@ def csv_dump(apt_list):
     with open(file_path, "w", newline='') as f:
         writer = csv.writer(f, delimiter='|')
         writer.writerow(['sep=|'])
+        writer.writerow(['Rent', 'Beds', 'Address', 'Distance', 'T Stop', 'Link'])
         for apt in apt_list:
             writer.writerow(apt.get_data())
