@@ -99,13 +99,13 @@ def scrape_apts(city, state, beds, price, apt_list):
                     price_elem = header.find_element(By.XPATH, ".//p[@class='property-rents']")
                     price = price_elem.text
 
+            # strip off price range
             if '-' in price:
                 price = price.split('-')[0]
 
-            print(price)
+            # remove characters so we can sort as an int
             price = price.replace('$','')
             price = price.replace(',','')
-            print(price)
 
             beds_elem = header.find_elements(By.XPATH, ".//p[@class='property-beds']")
             beds = ""
@@ -116,6 +116,7 @@ def scrape_apts(city, state, beds, price, apt_list):
                 beds_elem = header.find_element(By.XPATH, ".//div[@class='bed-range']")
                 beds = beds_elem.text
 
+            # strip off range
             if '-' in beds:
                 beds = beds.split('-')[0]
                 beds += ' Beds'

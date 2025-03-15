@@ -57,9 +57,16 @@ def get_listings(city, state, is_rental, rent, beds, move_in_date, apt_list):
         #print(apt)
         #skip for now
         if 'units' in apt:
-            continue 
-        rent = apt['price']
-        beds = apt['bedrooms']
+            unit = apt['units'][0]
+            beds = unit['beds']
+            rent = unit['price']
+            rent = rent.replace('+', '')
+            rent = rent.replace('$', '')
+            rent = rent.replace(',', '')
+        else:
+            rent = apt['price']
+            beds = apt['bedrooms']
+        beds = str(beds) + ' Beds'
         address = apt['address']
         url = prefix + apt['detailUrl']
         a = Apt(rent, beds, address, "", url)
