@@ -74,12 +74,15 @@ def scrape_apts(city, state, beds, price, apt_list):
             #addr = header.get_attribute("data-streetaddress")
             addr_detail = header.find_elements(By.XPATH, ".//div[@class='property-address js-url']")
             addr_title = header.find_elements(By.XPATH, ".//div[@class='property-title']")
+            addr_other = header.find_elements(By.XPATH, ".//p[@class='property-title']")
             addr = ''
 
             if addr_detail:
                 addr = addr_detail[0].text
             elif addr_title:
                 addr = addr_title[0].text
+            elif addr_other:
+                addr = addr_other[0].text
             else:
                 print('oops')
             #print(url)

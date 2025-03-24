@@ -20,21 +20,27 @@ class Apt:
     def set_dist_loc(self, loc):
         self.distance_to = loc
 
-    def get_data(self):
-        data = [self.rent, self.beds, self.address, self.distance_to, self.distance, self.url]
-        return data
+    def get_data(self, has_dist):
+        if has_dist:
+            return [self.rent, self.beds, self.address, self.distance_to, self.distance, self.url]
+        else:
+            return [self.rent, self.beds, self.address, self.url]
 
     def __str__(self):
         return f"{self.rent} | {self.beds} | {self.address}| {self.distance} | closet = {self.distance_to} | {self.url}"
 
 
 
-def csv_dump(apt_list):
+def csv_dump(apt_list, has_dist):
     timestr = time.strftime("%m-%d-%Y-%H%M%S")
     file_path = "output/" + timestr + ".csv"
     with open(file_path, "w", newline='') as f:
         writer = csv.writer(f, delimiter='|')
         writer.writerow(['sep=|'])
-        writer.writerow(['Rent', 'Beds', 'Address', 'Distance', 'T Stop', 'Link'])
+        if has_dist:
+            writer.writerow(['Rent', 'Beds', 'Address', 'Distance', 'T Stop', 'Link'])
+        else:
+            writer.writerow(['Rent', 'Beds', 'Address', 'Link'])
+            
         for apt in apt_list:
-            writer.writerow(apt.get_data())
+            writer.writerow(apt.get_data(has_dist))
